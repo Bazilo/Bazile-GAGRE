@@ -1,0 +1,1181 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Bazile Gagré – Géomaticien Senior & Expert SIG</title>
+
+<!-- Fonts -->
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700;900&family=DM+Sans:wght@300;400;500;600&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+
+<!-- Leaflet CSS -->
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+
+<style>
+  :root {
+    /* ── Palette Esri – Dark Professional ── */
+    --esri-blue:       #007AC2;
+    --esri-blue-hover: #0095E2;
+    --esri-blue-dark:  #005A8E;
+    --esri-cyan:       #00B4F0;
+    --esri-cyan-dim:   rgba(0,180,240,.15);
+
+    --dark-900: #080F1A;   /* fond le plus profond */
+    --dark-850: #0D1828;
+    --dark-800: #111E30;   /* bg sections principales */
+    --dark-750: #162437;
+    --dark-700: #1C2F45;   /* bg cartes */
+    --dark-650: #22384F;   /* cartes hover */
+    --dark-600: #2B4460;   /* bordures / séparateurs */
+
+    --text-100: #EEF3F8;
+    --text-200: #B0C4D8;
+    --text-300: #6A8FAB;
+    --text-400: #3E5F7A;
+
+    --gold:    #F4A91A;
+    --gold-dim: rgba(244,169,26,.15);
+
+    --accent-green: #5DAF3E;
+
+    /* Compat aliases */
+    --earth:       var(--esri-blue-dark);
+    --earth-light: var(--esri-blue);
+    --savanna:     var(--esri-blue);
+    --sand:        var(--dark-700);
+    --cream:       var(--dark-800);
+    --dark:        var(--dark-900);
+    --text:        var(--text-100);
+    --muted:       var(--text-300);
+    --accent:      var(--esri-cyan);
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; }
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--dark-800);
+    color: var(--text-100);
+    overflow-x: hidden;
+    cursor: auto; /* curseur standard */
+  }
+
+  /* ── NAV ── */
+  nav {
+    position: fixed; top: 0; left: 0; right: 0; z-index: 500;
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 1.2rem 4rem;
+    background: rgba(8,15,26,.92);
+    backdrop-filter: blur(16px);
+    border-bottom: 1px solid rgba(0,122,194,.2);
+  }
+  .nav-logo { font-family:'Playfair Display',serif; font-weight:900; font-size:1.1rem; color:var(--text-100); letter-spacing:.02em; }
+  .nav-logo span { color:var(--esri-blue); }
+  .nav-links { display:flex; gap:2.5rem; list-style:none; }
+  .nav-links a { font-family:'Space Mono',monospace; font-size:.72rem; text-transform:uppercase; letter-spacing:.12em; color:var(--text-300); text-decoration:none; transition:color .2s; }
+  .nav-links a:hover { color:var(--esri-cyan); }
+  .nav-cta { background:var(--esri-blue)!important; color:white!important; padding:.5rem 1.2rem; border-radius:3px; }
+  .nav-cta:hover { background:var(--esri-blue-hover)!important; color:white!important; }
+
+  /* ── HERO ── */
+  .hero { min-height:100vh; display:grid; grid-template-columns:1fr 1fr; position:relative; overflow:hidden; }
+  .hero-left {
+    background: linear-gradient(135deg, var(--dark-900) 0%, var(--dark-850) 60%, #0a1520 100%);
+    display:flex; flex-direction:column; justify-content:center;
+    padding: 8rem 5rem 5rem 6rem; position:relative;
+  }
+  .hero-left::before {
+    content:''; position:absolute; inset:0;
+    background: radial-gradient(ellipse at top left, rgba(0,122,194,.12) 0%, transparent 65%);
+    pointer-events:none;
+  }
+  .hero-left::after {
+    content:''; position:absolute; right:-1px; top:0; bottom:0; width:80px;
+    background: var(--dark-750);
+    clip-path: polygon(40px 0,100% 0,100% 100%,0 100%);
+  }
+  .hero-tag { font-family:'Space Mono',monospace; font-size:.68rem; letter-spacing:.2em; text-transform:uppercase; color:var(--esri-cyan); margin-bottom:1.5rem; }
+  .hero-name { font-family:'Playfair Display',serif; font-size:clamp(3rem,5vw,5.5rem); font-weight:900; color:var(--text-100); line-height:1.0; margin-bottom:1rem; }
+  .hero-name em { font-style:italic; color:var(--esri-blue); }
+  .hero-title { font-size:1.05rem; color:var(--text-200); font-weight:300; line-height:1.7; margin-bottom:2.5rem; max-width:380px; }
+  .hero-stats { display:flex; gap:2rem; margin-bottom:3rem; }
+  .stat { text-align:center; }
+  .stat-num { font-family:'Playfair Display',serif; font-size:2.2rem; font-weight:900; color:var(--esri-cyan); display:block; }
+  .stat-label { font-size:.72rem; color:var(--text-300); text-transform:uppercase; letter-spacing:.08em; }
+  .hero-btns { display:flex; gap:1rem; flex-wrap:wrap; }
+  .btn-primary { background:var(--esri-blue); color:white; padding:.9rem 2rem; font-family:'DM Sans',sans-serif; font-weight:600; font-size:.9rem; text-decoration:none; border-radius:3px; transition:background .2s,transform .2s,box-shadow .2s; display:inline-block; box-shadow:0 4px 20px rgba(0,122,194,.35); }
+  .btn-primary:hover { background:var(--esri-blue-hover); transform:translateY(-2px); box-shadow:0 8px 28px rgba(0,122,194,.5); }
+  .btn-secondary { border:1.5px solid rgba(0,180,240,.4); color:var(--esri-cyan); padding:.9rem 2rem; font-family:'DM Sans',sans-serif; font-size:.9rem; text-decoration:none; border-radius:3px; transition:border-color .2s,transform .2s,background .2s; display:inline-block; }
+  .btn-secondary:hover { border-color:var(--esri-cyan); background:rgba(0,180,240,.08); transform:translateY(-2px); }
+
+  /* ── HERO RIGHT – PHOTO PROFIL ── */
+  .hero-right {
+    background: linear-gradient(135deg, var(--dark-750) 0%, var(--dark-800) 100%);
+    display:flex; align-items:center; justify-content:center; padding:8rem 5rem 5rem;
+    position:relative;
+  }
+  .hero-right::before {
+    content:''; position:absolute; inset:0;
+    background: radial-gradient(ellipse at center, rgba(0,122,194,.08) 0%, transparent 70%);
+    pointer-events:none;
+  }
+  .profile-photo-wrap {
+    position:relative; display:flex; align-items:center; justify-content:center;
+  }
+  .profile-photo-ring {
+    position:absolute;
+    width:340px; height:340px;
+    border-radius:50%;
+    border:2px solid rgba(0,122,194,.3);
+    animation: ringPulse 3s ease-in-out infinite;
+  }
+  .profile-photo-ring-2 {
+    position:absolute;
+    width:380px; height:380px;
+    border-radius:50%;
+    border:1px solid rgba(0,180,240,.12);
+    animation: ringPulse 3s ease-in-out infinite 1s;
+  }
+  @keyframes ringPulse {
+    0%,100% { opacity:.4; transform:scale(1); }
+    50%      { opacity:.8; transform:scale(1.02); }
+  }
+  .profile-photo {
+    width:290px; height:290px;
+    border-radius:50%;
+    object-fit:cover;
+    border:4px solid var(--esri-blue);
+    box-shadow:
+      0 0 0 8px rgba(0,122,194,.12),
+      0 20px 60px rgba(0,0,0,.5),
+      0 0 40px rgba(0,122,194,.2);
+    position:relative; z-index:1;
+    transition: box-shadow .3s ease, transform .3s ease;
+  }
+  .profile-photo:hover {
+    transform: scale(1.03);
+    box-shadow: 0 0 0 8px rgba(0,180,240,.2), 0 24px 70px rgba(0,0,0,.6), 0 0 60px rgba(0,122,194,.35);
+  }
+  .profile-badge {
+    position:absolute; bottom:14px; right:14px; z-index:2;
+    background:var(--esri-blue);
+    color:white;
+    font-family:'Space Mono',monospace;
+    font-size:.6rem;
+    letter-spacing:.1em;
+    text-transform:uppercase;
+    padding:.4rem .9rem;
+    border-radius:2px;
+    box-shadow:0 4px 16px rgba(0,122,194,.5);
+  }
+
+  /* ── SECTIONS ── */
+  section { padding:7rem 0; }
+  .container { max-width:1200px; margin:0 auto; padding:0 4rem; }
+  .section-tag { font-family:'Space Mono',monospace; font-size:.68rem; letter-spacing:.2em; text-transform:uppercase; color:var(--esri-blue); margin-bottom:1rem; }
+  .section-title { font-family:'Playfair Display',serif; font-size:clamp(2rem,3.5vw,3rem); font-weight:900; color:var(--text-100); line-height:1.15; margin-bottom:1.5rem; }
+  .section-lead { font-size:1.05rem; color:var(--text-300); line-height:1.8; max-width:620px; }
+
+  /* ── SERVICES ── */
+  #services { background:var(--dark-800); }
+  .services-intro { display:grid; grid-template-columns:1fr 1fr; gap:6rem; align-items:start; margin-bottom:5rem; }
+  .services-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:1px; background:rgba(0,122,194,.1); }
+  .service-card {
+    background:var(--dark-700); padding:2.5rem 2rem;
+    transition:background .25s,transform .25s,box-shadow .25s;
+    position:relative; overflow:hidden;
+  }
+  .service-card::before {
+    content:''; position:absolute; bottom:0; left:0; width:0; height:3px;
+    background:linear-gradient(90deg, var(--esri-blue), var(--esri-cyan));
+    transition:width .35s ease;
+  }
+  .service-card:hover { background:var(--dark-650); transform:translateY(-4px); box-shadow:0 12px 40px rgba(0,0,0,.3); }
+  .service-card:hover::before { width:100%; }
+  .service-icon { font-size:2.2rem; margin-bottom:1.2rem; display:block; }
+  .service-card h3 { font-family:'Playfair Display',serif; font-size:1.2rem; font-weight:700; color:var(--text-100); margin-bottom:.8rem; line-height:1.3; }
+  .service-card p { font-size:.9rem; color:var(--text-300); line-height:1.7; }
+  .service-targets { margin-top:1.2rem; display:flex; flex-wrap:wrap; gap:.4rem; }
+  .target-chip { font-family:'Space Mono',monospace; font-size:.6rem; letter-spacing:.08em; text-transform:uppercase; background:rgba(0,122,194,.12); color:var(--esri-cyan); padding:3px 8px; border-radius:2px; border:1px solid rgba(0,122,194,.2); }
+
+  /* ── PROJETS ── */
+  #projets { background:var(--dark-750); }
+  .projets-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:2rem; margin-top:4rem; }
+  .projet-card {
+    background:var(--dark-700); border-radius:4px; overflow:hidden;
+    box-shadow:0 4px 24px rgba(0,0,0,.3);
+    border:1px solid rgba(0,122,194,.12);
+    transition:transform .3s,box-shadow .3s,border-color .3s;
+    display:flex; flex-direction:column;
+  }
+  .projet-card:hover { transform:translateY(-6px); box-shadow:0 16px 48px rgba(0,0,0,.45); border-color:rgba(0,122,194,.4); }
+  .projet-img-placeholder {
+    width:100%; height:180px;
+    background:linear-gradient(135deg, var(--dark-900) 0%, var(--esri-blue-dark) 60%, var(--esri-blue) 100%);
+    display:flex; align-items:center; justify-content:center; font-size:3rem;
+    position:relative; overflow:hidden;
+  }
+  .projet-img-placeholder::after {
+    content:''; position:absolute; inset:0;
+    background: radial-gradient(ellipse at 30% 40%, rgba(0,180,240,.1) 0%, transparent 70%);
+  }
+  .projet-img { width:100%; height:180px; object-fit:cover; display:block; }
+  .projet-body { padding:1.8rem; flex:1; display:flex; flex-direction:column; }
+  .projet-tag { font-family:'Space Mono',monospace; font-size:.6rem; letter-spacing:.15em; text-transform:uppercase; color:var(--esri-blue); margin-bottom:.6rem; }
+  .projet-title { font-family:'Playfair Display',serif; font-size:1.05rem; font-weight:700; color:var(--text-100); margin-bottom:.7rem; line-height:1.3; }
+  .projet-desc { font-size:.85rem; color:var(--text-300); line-height:1.7; margin-bottom:1.2rem; flex:1; }
+  .projet-link {
+    font-family:'Space Mono',monospace; font-size:.7rem; letter-spacing:.1em; text-transform:uppercase;
+    color:var(--esri-cyan); text-decoration:none; display:inline-flex; align-items:center; gap:.4rem;
+    transition:color .2s; padding:.55rem 1rem; background:rgba(0,180,240,.08); border-radius:2px;
+    border:1px solid rgba(0,180,240,.2); align-self:flex-start;
+    transition:all .2s;
+  }
+  .projet-link:hover { color:white; background:var(--esri-blue); border-color:var(--esri-blue); }
+  .projet-link::after { content:'→'; }
+
+  /* ── CARTE OSM ── */
+  #carte { background:var(--dark-800); }
+  .carte-layout { display:grid; grid-template-columns:1fr 1.6fr; gap:4rem; margin-top:4rem; align-items:start; }
+  #osm-map {
+    height:480px; border-radius:4px;
+    border:1px solid rgba(0,122,194,.2); overflow:hidden;
+    box-shadow:0 8px 40px rgba(0,0,0,.4);
+  }
+  .carte-info h3 { font-family:'Playfair Display',serif; font-size:1.4rem; color:var(--text-100); margin-bottom:1rem; }
+  .carte-info p { font-size:.9rem; color:var(--text-300); line-height:1.8; margin-bottom:1.5rem; }
+  .geo-layers { display:flex; flex-direction:column; gap:.8rem; margin-top:1.5rem; }
+  .layer-btn {
+    display:flex; align-items:center; gap:.8rem; padding:.8rem 1.2rem;
+    background:var(--dark-700); border:1px solid rgba(0,122,194,.2); border-radius:3px;
+    font-family:'DM Sans',sans-serif; font-size:.85rem; color:var(--text-200);
+    cursor:pointer; transition:all .2s; text-align:left;
+  }
+  .layer-btn:hover { background:var(--dark-650); border-color:var(--esri-blue); color:white; }
+  .layer-btn.active { background:var(--esri-blue-dark); color:white; border-color:var(--esri-blue); box-shadow:0 4px 16px rgba(0,122,194,.2); }
+  .layer-dot { width:10px; height:10px; border-radius:50%; flex-shrink:0; }
+
+  /* ── ENSEIGNEMENT ACADÉMIQUE (rénové) ── */
+  #enseignement {
+    background:linear-gradient(180deg, var(--dark-900) 0%, var(--dark-850) 100%);
+    position:relative; overflow:hidden;
+  }
+  #enseignement::before {
+    content:''; position:absolute; top:-200px; right:-200px;
+    width:600px; height:600px; border-radius:50%;
+    background:radial-gradient(circle, rgba(0,122,194,.06) 0%, transparent 70%);
+    pointer-events:none;
+  }
+  #enseignement .section-tag { color:var(--esri-cyan); }
+  #enseignement .section-title { color:var(--text-100); }
+  #enseignement .section-lead { color:var(--text-300); }
+
+  .teaching-header { display:grid; grid-template-columns:1fr auto; gap:3rem; align-items:end; margin-bottom:1.5rem; }
+  .teaching-stat {
+    display:flex; gap:2rem; flex-wrap:wrap;
+    background:var(--dark-700); border:1px solid rgba(0,122,194,.15);
+    padding:1.5rem 2rem; border-radius:4px;
+    box-shadow:0 4px 20px rgba(0,0,0,.2);
+  }
+  .tstat { text-align:center; }
+  .tstat-num { font-family:'Playfair Display',serif; font-size:2rem; font-weight:900; color:var(--esri-cyan); display:block; }
+  .tstat-label { font-size:.72rem; color:var(--text-300); text-transform:uppercase; letter-spacing:.08em; }
+
+  /* Grille des cartes université */
+  .univ-grid {
+    display:grid; grid-template-columns:repeat(2,1fr); gap:1.5rem; margin-top:3.5rem;
+  }
+  .univ-card {
+    background:var(--dark-700); border:1px solid rgba(0,122,194,.15); border-radius:6px;
+    overflow:hidden; transition:transform .3s, box-shadow .3s, border-color .3s;
+    position:relative;
+  }
+  .univ-card:hover { transform:translateY(-4px); box-shadow:0 16px 48px rgba(0,0,0,.35); border-color:rgba(0,122,194,.4); }
+  .univ-card::before {
+    content:''; position:absolute; top:0; left:0; right:0; height:3px;
+    background:linear-gradient(90deg, var(--esri-blue), var(--esri-cyan));
+  }
+  .univ-card-header {
+    display:flex; align-items:center; gap:1.2rem; padding:1.5rem 1.8rem 1rem;
+  }
+  .univ-logo {
+    width:54px; height:54px; border-radius:8px; flex-shrink:0;
+    display:flex; align-items:center; justify-content:center;
+    font-family:'Space Mono',monospace; font-weight:700; font-size:.75rem;
+    letter-spacing:.05em; color:white; text-align:center;
+    box-shadow:0 4px 12px rgba(0,0,0,.3);
+  }
+  .univ-meta h3 { font-family:'Playfair Display',serif; font-size:1.05rem; font-weight:700; color:var(--text-100); line-height:1.2; margin-bottom:.25rem; }
+  .univ-period { font-family:'Space Mono',monospace; font-size:.65rem; letter-spacing:.1em; text-transform:uppercase; color:var(--esri-blue); }
+  .univ-duration { display:inline-block; margin-left:.5rem; background:rgba(0,122,194,.12); color:var(--esri-cyan); font-size:.6rem; padding:2px 6px; border-radius:2px; }
+
+  .univ-card-body { padding:0 1.8rem 1.8rem; display:flex; flex-direction:column; gap:1rem; }
+  .course-block {
+    background:var(--dark-650); border-radius:4px; padding:1rem 1.2rem;
+    border-left:3px solid var(--esri-blue);
+  }
+  .course-level {
+    font-family:'Space Mono',monospace; font-size:.6rem; letter-spacing:.12em; text-transform:uppercase;
+    color:var(--gold); display:block; margin-bottom:.3rem;
+  }
+  .course-title { font-size:.9rem; color:var(--text-100); font-weight:600; line-height:1.4; margin-bottom:.6rem; }
+  .course-tools { display:flex; flex-wrap:wrap; gap:.4rem; }
+  .ctool {
+    font-family:'Space Mono',monospace; font-size:.6rem; letter-spacing:.06em;
+    background:rgba(0,122,194,.1); color:var(--esri-cyan); border:1px solid rgba(0,122,194,.2);
+    padding:2px 7px; border-radius:2px;
+  }
+
+  .univ-card.full-width { grid-column: span 2; }
+  .univ-card.full-width .univ-card-body { display:grid; grid-template-columns:1fr 1fr; gap:1rem; }
+
+  /* Bloc engagement Afrique */
+  .africa-focus {
+    margin-top:3.5rem;
+    background:rgba(0,122,194,.06); border:1px solid rgba(0,122,194,.18);
+    padding:2.5rem 3rem; border-radius:6px;
+    display:grid; grid-template-columns:auto 1fr; gap:2rem; align-items:center;
+    box-shadow:inset 0 1px 0 rgba(0,180,240,.08);
+  }
+  .africa-icon { font-size:3.5rem; line-height:1; }
+  .africa-focus h3 { font-family:'Playfair Display',serif; font-size:1.4rem; color:var(--esri-cyan); margin-bottom:.7rem; }
+  .africa-focus p { color:var(--text-300); line-height:1.7; font-size:.95rem; }
+  .africa-focus a { color:var(--esri-blue); text-decoration:none; }
+  .africa-focus a:hover { color:var(--esri-cyan); }
+
+  /* ── PARCOURS ── */
+  #parcours { background:var(--dark-750); }
+  .timeline { position:relative; margin-top:4rem; padding-left:2rem; }
+  .timeline::before { content:''; position:absolute; left:0; top:8px; bottom:0; width:2px; background:linear-gradient(to bottom,var(--esri-blue),transparent); }
+  .timeline-item { position:relative; margin-bottom:3.5rem; padding-left:2.5rem; }
+  .timeline-dot { position:absolute; left:-2.5rem; top:6px; width:12px; height:12px; background:var(--esri-blue); border-radius:50%; border:3px solid var(--dark-750); box-shadow:0 0 0 2px rgba(0,122,194,.3); }
+  .timeline-date { font-family:'Space Mono',monospace; font-size:.68rem; letter-spacing:.1em; color:var(--esri-blue); margin-bottom:.4rem; }
+  .timeline-role { font-family:'Playfair Display',serif; font-size:1.2rem; font-weight:700; color:var(--text-100); margin-bottom:.3rem; }
+  .timeline-org { font-size:.88rem; color:var(--text-300); margin-bottom:.8rem; font-style:italic; }
+  .timeline-org a { color:var(--esri-blue); text-decoration:none; transition:color .2s; }
+  .timeline-org a:hover { color:var(--esri-cyan); }
+  .timeline-points { list-style:none; display:flex; flex-direction:column; gap:.35rem; }
+  .timeline-points li { font-size:.88rem; color:var(--text-200); padding-left:1rem; position:relative; }
+  .timeline-points li::before { content:'•'; position:absolute; left:0; color:var(--esri-blue); }
+  .timeline-links { display:flex; flex-wrap:wrap; gap:.6rem; margin-top:.9rem; }
+  .timeline-url {
+    font-family:'Space Mono',monospace; font-size:.62rem; letter-spacing:.08em; text-transform:uppercase;
+    color:var(--esri-cyan); background:rgba(0,122,194,.1); border:1px solid rgba(0,122,194,.25);
+    padding:4px 10px; border-radius:2px; text-decoration:none; transition:all .2s;
+  }
+  .timeline-url:hover { background:var(--esri-blue); color:white; border-color:var(--esri-blue); }
+
+  /* ── OUTILS ── */
+  #outils { background:var(--dark-800); }
+  .tools-layout { display:grid; grid-template-columns:1fr 1fr; gap:5rem; margin-top:4rem; align-items:start; }
+  .tool-category { margin-bottom:2.5rem; }
+  .tool-cat-label {
+    font-family:'Space Mono',monospace; font-size:.68rem; letter-spacing:.12em; text-transform:uppercase;
+    color:var(--esri-blue); margin-bottom:1rem; padding-bottom:.5rem;
+    border-bottom:1px solid rgba(0,122,194,.2);
+  }
+  .tool-tags { display:flex; flex-wrap:wrap; gap:.5rem; }
+  .tool-tag {
+    background:var(--dark-700); border:1px solid rgba(0,122,194,.2); color:var(--text-200);
+    padding:.4rem .9rem; font-size:.82rem; border-radius:3px; transition:all .2s;
+  }
+  .tool-tag:hover { background:var(--esri-blue); color:white; border-color:var(--esri-blue); box-shadow:0 4px 14px rgba(0,122,194,.3); }
+  .certifs-block h3 { font-family:'Playfair Display',serif; font-size:1.4rem; color:var(--text-100); margin-bottom:1.5rem; }
+  .certif-item { display:flex; gap:1rem; margin-bottom:1.2rem; align-items:flex-start; }
+  .certif-dot { width:8px; height:8px; background:var(--esri-blue); border-radius:50%; margin-top:6px; flex-shrink:0; }
+  .certif-item p { font-size:.88rem; color:var(--text-200); line-height:1.5; }
+  .certif-item strong { color:var(--esri-cyan); font-weight:600; }
+
+  /* ── CONTACT ── */
+  #contact { background:var(--dark-900); }
+  #contact .section-tag { color:var(--esri-cyan); }
+  #contact .section-title { color:var(--text-100); }
+  .contact-layout { display:grid; grid-template-columns:1fr 1fr; gap:6rem; margin-top:4rem; align-items:start; }
+  .contact-text p { color:var(--text-300); line-height:1.8; margin-bottom:2rem; font-size:.95rem; }
+  .contact-infos { display:flex; flex-direction:column; gap:1.2rem; }
+  .contact-line { display:flex; align-items:center; gap:1rem; }
+  .contact-icon { width:40px; height:40px; background:rgba(0,122,194,.1); border:1px solid rgba(0,122,194,.2); border-radius:3px; display:flex; align-items:center; justify-content:center; font-size:1.1rem; flex-shrink:0; }
+  .contact-line a,.contact-line span { color:var(--text-300); text-decoration:none; font-size:.9rem; transition:color .2s; }
+  .contact-line a:hover { color:var(--esri-cyan); }
+
+  /* Form */
+  .contact-form { display:flex; flex-direction:column; gap:1rem; }
+  .form-row { display:grid; grid-template-columns:1fr 1fr; gap:1rem; }
+  .form-input,.form-textarea {
+    background:rgba(0,122,194,.06); border:1px solid rgba(0,122,194,.2); color:var(--text-100);
+    padding:.9rem 1.2rem; font-family:'DM Sans',sans-serif; font-size:.9rem; border-radius:3px; outline:none;
+    transition:border-color .2s,box-shadow .2s; width:100%;
+  }
+  .form-input::placeholder,.form-textarea::placeholder { color:var(--text-400); }
+  .form-input:focus,.form-textarea:focus { border-color:var(--esri-blue); box-shadow:0 0 0 3px rgba(0,122,194,.12); }
+  .form-textarea { min-height:120px; resize:vertical; }
+  .btn-send { background:var(--esri-blue); color:white; padding:1rem 2rem; font-family:'DM Sans',sans-serif; font-weight:600; font-size:.9rem; border:none; border-radius:3px; cursor:pointer; transition:all .2s; align-self:flex-start; box-shadow:0 4px 16px rgba(0,122,194,.3); }
+  .btn-send:hover { background:var(--esri-blue-hover); transform:translateY(-2px); box-shadow:0 8px 24px rgba(0,122,194,.45); }
+  .btn-send:disabled { background:var(--text-400); cursor:not-allowed; transform:none; box-shadow:none; }
+  .form-success { background:rgba(93,175,62,.12); border:1px solid rgba(93,175,62,.4); color:var(--accent-green); padding:1rem 1.5rem; border-radius:3px; font-size:.9rem; line-height:1.6; display:none; }
+  .form-success.show { display:block; }
+  .form-note { font-family:'Space Mono',monospace; font-size:.62rem; letter-spacing:.06em; color:var(--text-400); margin-top:.5rem; }
+
+  /* ── FOOTER ── */
+  footer { background:var(--dark-900); border-top:1px solid rgba(0,122,194,.1); padding:2rem 4rem; display:flex; align-items:center; justify-content:space-between; }
+  footer p { font-family:'Space Mono',monospace; font-size:.68rem; color:var(--text-400); letter-spacing:.08em; }
+  .footer-logo { font-family:'Playfair Display',serif; font-size:1rem; color:var(--text-300); }
+  .footer-logo span { color:var(--esri-blue); }
+
+  /* ── ANIMATIONS ── */
+  .fade-in { opacity:0; transform:translateY(24px); transition:opacity .65s ease,transform .65s ease; }
+  .fade-in.visible { opacity:1; transform:translateY(0); }
+
+  /* ── RESPONSIVE ── */
+  @media(max-width:900px) {
+    .hero { grid-template-columns:1fr; }
+    .hero-right { display:none; }
+    .hero-left { padding:7rem 2rem 4rem; }
+    nav { padding:1rem 2rem; }
+    .nav-links { display:none; }
+    .container { padding:0 2rem; }
+    .services-intro,.tools-layout,.contact-layout,.carte-layout { grid-template-columns:1fr; gap:2.5rem; }
+    .services-grid,.projets-grid { grid-template-columns:1fr; }
+    .univ-grid { grid-template-columns:1fr; }
+    .univ-card.full-width { grid-column:span 1; }
+    .univ-card.full-width .univ-card-body { grid-template-columns:1fr; }
+    .teaching-header { grid-template-columns:1fr; }
+    footer { flex-direction:column; gap:1rem; text-align:center; }
+    #osm-map { height:320px; }
+  }
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <div class="nav-logo">B.<span>Gagré</span></div>
+  <ul class="nav-links">
+    <li><a href="#services">Services</a></li>
+    <li><a href="#projets">Projets</a></li>
+    <li><a href="#carte">Carte</a></li>
+    <li><a href="#enseignement">Académique</a></li>
+    <li><a href="#parcours">Parcours</a></li>
+    <li><a href="#outils">Outils</a></li>
+    <li><a href="#contact" class="nav-cta">Contact</a></li>
+  </ul>
+</nav>
+
+<!-- ═══════════════════════════ HERO ═══════════════════════════ -->
+<section class="hero" id="accueil">
+  <div class="hero-left">
+    <div class="hero-tag">Géomaticien· Expert SIG & Data· Enseignant</div>
+    <h1 class="hero-name">Bazile<br><em>Gagré</em></h1>
+    <p class="hero-title">Spécialiste des systèmes d’information géographique et de la gouvernance de la donnée territoriale, j’interviens sur des projets à forte valeur stratégique auprès des acteurs publics et privés.</p>
+    <div class="hero-stats">
+      <div class="stat"><span class="stat-num">8+</span><span class="stat-label">Années d'exp.</span></div>
+      <div class="stat"><span class="stat-num">5</span><span class="stat-label">Universités</span></div>
+      <div class="stat"><span class="stat-num">5</span><span class="stat-label">Institutions</span></div>
+    </div>
+    <div class="hero-btns">
+      <a href="#projets" class="btn-primary">Mes projets</a>
+      <a href="#contact" class="btn-secondary">Me contacter</a>
+    </div>
+  </div>
+
+  <div class="hero-right">
+    <div class="profile-photo-wrap">
+      <div class="profile-photo-ring-2"></div>
+      <div class="profile-photo-ring"></div>
+      <img
+        class="profile-photo"
+        src="https://media.licdn.com/dms/image/v2/D4E03AQEhBujbWbmzyA/profile-displayphoto-scale_400_400/B4EZ201IMvJUAg-/0/1776855322769?e=1779926400&v=beta&t=cgOvrVHYd47iWaxRWyc38I8i5xzovAit0QZ0ReEGHDw"
+        alt="Bazile Gagré – Géomaticien Senior"
+      />
+      <div class="profile-badge">contacter moi</div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════ SERVICES ═══════════════════════════ -->
+<section id="services">
+  <div class="container">
+    <div class="services-intro fade-in">
+      <div>
+        <div class="section-tag">Ce que je propose</div>
+        <h2 class="section-title">Expertises &<br>Services</h2>
+      </div>
+      <p class="section-lead">De l'audit de la donnée en passant par la mise en place d'infrastructures SIG à la formation, j'accompagne gouvernements, collectivités, entreprises et ONG dans leur transformation géospatiale.</p>
+    </div>
+    <div class="services-grid fade-in">
+      <div class="service-card">
+        <span class="service-icon">🗺️</span>
+        <h3>Architecture & Déploiement SIG</h3>
+        <p>Conception et mise en œuvre d'architectures SIG complètes (ArcGIS Enterprise, Geoserver, QGIS, PostGIS). Structuration et gestion de bases de données territoriales et patrimoniales.</p>
+        <div class="service-targets"><span class="target-chip">Gouvernements</span><span class="target-chip">Collectivités</span><span class="target-chip">Privé</span></div>
+      </div>
+      <div class="service-card">
+        <span class="service-icon">📊</span>
+        <h3>Data & Analyses Territoriales </h3>
+        <p>Collecte, traitement de la données et analyses spatiales. Production cartographique, tableaux de bord et observatoires pour l'aide à la décision en matière de gestion urbaine et environnement.</p>
+        <div class="service-targets"><span class="target-chip">Collectivités</span><span class="target-chip">Agences</span><span class="target-chip">ONG</span></div>
+      </div>
+      <div class="service-card">
+        <span class="service-icon">🌐</span>
+        <h3>Webmapping & Applications Métiers</h3>
+        <p>Développement de portails cartographiques et d'applications SIG thématiques (Cadastre, mobilité, urbanisme, réseaux) accessibles en version web et mobile.</p>
+        <div class="service-targets"><span class="target-chip">Collectivités</span><span class="target-chip">ONG</span><span class="target-chip">Entreprises</span></div>
+      </div>
+      <div class="service-card">
+        <span class="service-icon">🎓</span>
+        <h3>Formation & Enseignement SIG</h3>
+        <p>Cours de SIG aux universitaires (QGIS, ArcGIS Pro, PostGIS, Portail ARcGIS, SIG Web open source. Formations intra-entreprise et accompagnement sur mesure des équipes géomatiques.</p>
+        <div class="service-targets"><span class="target-chip">Universités</span><span class="target-chip">Grandes écoles</span><span class="target-chip">Équipes</span></div>
+      </div>
+      <div class="service-card">
+        <span class="service-icon">📋</span>
+        <h3>Conduite de Projets & Marchés Publics</h3>
+        <p>Pilotage de marchés publics, coordination de prestataires, planification et contrôle qualité. Méthodes Agile et cascade selon les contextes institutionnels.</p>
+        <div class="service-targets"><span class="target-chip">Secteur public</span><span class="target-chip">Syndicats mixtes</span></div>
+      </div>
+      <div class="service-card">
+        <span class="service-icon">📡</span>
+        <h3>SIG Humanitaire & Développement</h3>
+        <p>Cartographie participative, collecte terrain mobile, et mise en place de SIG pour des projets humanitaires et de gestion des risques naturels en Afrique subsaharienne.</p>
+        <div class="service-targets"><span class="target-chip">ONG</span><span class="target-chip">Bailleurs</span><span class="target-chip">OSM</span></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════ PROJETS ═══════════════════════════ -->
+<section id="projets">
+  <div class="container">
+    <div class="fade-in">
+      <div class="section-tag">Réalisations</div>
+      <h2 class="section-title">Projets &<br>Cartographies</h2>
+      <p class="section-lead">Une sélection de projets SIG menés pour des collectivités, gouvernements et institutions académiques en France et en Afrique.</p>
+    </div>
+    <div class="projets-grid fade-in">
+
+      <div class="projet-card">
+        <!-- Remplacez l'emoji par une image : <img class="projet-img" src="images/projet-smtyn.jpg" alt="..."> -->
+        <div class="projet-img-placeholder">🏗️</div>
+        <div class="projet-body">
+          <div class="projet-tag">ArcGIS Enterprise · 2025</div>
+          <h3 class="projet-title">Architecture SIG – Syndicat Mixte Thève-Ysieux-Nonette</h3>
+          <p class="projet-desc">Infrastructure SIG complète : bases de données réseaux et patrimoniales assainissement, portail cartographique ArcGIS Site, applications métiers (Exp Builder, Dashboard, Instant Apps).</p>
+          <!-- 👉 Remplacez href par le lien vers votre page de projet dédiée -->
+          <a href="https://sig.sicteub.org/portal/apps/storymaps/stories/70cc2bb6a1384fcb886a759a226855ea" class="projet-link">Voir le projet</a>
+        </div>
+      </div>
+
+      <div class="projet-card">
+        <div class="projet-img-placeholder">🏙️</div>
+        <div class="projet-body">
+          <div class="projet-tag">ArcGIS Enterprise · 2022–2024</div>
+          <h3 class="projet-title">Portail Cartographique – Seine-Saint-Denis (1,7M hab.)</h3>
+          <p class="projet-desc">Déploiement d'ArcGIS Enterprise et ouverture d'un portail cartographique grand public pour le Département de Seine-Saint-Denis. Encadrement de l'équipe géomatique.</p>
+          <!-- 👉 Remplacez href par le lien vers votre page de projet dédiée -->
+          <a href="https://geo.seinesaintdenis.fr/portal/apps/sites/#/geoportail93" class="projet-link">Voir le projet</a>
+        </div>
+      </div>
+
+      <div class="projet-card">
+        <div class="projet-img-placeholder">🏛️</div>
+        <div class="projet-body">
+          <div class="projet-tag">AGOL - Smart City · 2021</div>
+          <h3 class="projet-title">Plateforme SIG Smart City – Gouvernement Monégasque</h3>
+          <p class="projet-desc">Administration de la plateforme ArcGIS Enterprise pour Monaco. Déploiement d'applications mobiles de collecte terrain et structuration des données interservices gouvernementaux.</p>
+          <!-- 👉 Remplacez href par le lien vers votre page de projet dédiée -->
+          <a href="projets/monaco.html" class="projet-link">Voir le projet</a>
+        </div>
+      </div>
+
+      <div class="projet-card">
+        <div class="projet-img-placeholder">🌍</div>
+        <div class="projet-body">
+          <div class="projet-tag">CartONG · OSM · Humanitaire</div>
+          <h3 class="projet-title">Cartographie Participative – Afrique subsaharienne</h3>
+          <p class="projet-desc">Contributions OpenStreetMap et missions CartONG pour la cartographie de zones rurales en Afrique de l'Ouest, appui aux organisations humanitaires dans la gestion des données terrain.</p>
+          <!-- 👉 Remplacez href par le lien vers votre page de projet dédiée -->
+          <a href="https://www.cartong.org/" class="projet-link">Voir le projet</a>
+        </div>
+      </div>
+
+      <div class="projet-card">
+        <div class="projet-img-placeholder">🎓</div>
+        <div class="projet-body">
+          <div class="projet-tag">Enseignement · depuis 2020</div>
+          <h3 class="projet-title">Cours SIG – 5 Universités françaises</h3>
+          <p class="projet-desc">Conception et dispense de cours QGIS, ArcGIS Pro et SIG Web dans 5 établissements : Paris-Saclay, MNHN, Nanterre, CY Cergy Paris (x2 formations).</p>
+          <!-- 👉 Remplacez href par le lien vers votre page de projet dédiée -->
+          <a href="projets/enseignement.html" class="projet-link">Voir le projet</a>
+        </div>
+      </div>
+
+      <div class="projet-card">
+        <div class="projet-img-placeholder">🗂️</div>
+        <div class="projet-body">
+          <div class="projet-tag">Grand Paris Sud · 2019–2020</div>
+          <h3 class="projet-title">SIG Intercommunal – Grand Paris Sud</h3>
+          <p class="projet-desc">Administration du SIG intercommunal GéoGénérateur de l'agglomération Grand Paris Sud Seine-Essonne-Sénart. Assistance à maîtrise d'ouvrage et contrôle qualité des bases de données.</p>
+          <!-- 👉 Remplacez href par le lien vers votre page de projet dédiée -->
+          <a href="https://geosig.grandparissud.fr/portal/" class="projet-link">Voir le projet</a>
+        </div>
+      </div>
+
+    </div>
+   <!--
+    <div style="margin-top:2.5rem;padding:1.5rem 2rem;background:var(--dark-700);border-left:3px solid var(--esri-blue);border-radius:3px;" class="fade-in">
+      <div class="section-tag" style="margin-bottom:.4rem;">📌 Instructions de personnalisation</div>
+      <p style="font-size:.85rem;color:var(--text-300);line-height:1.7;">Pour chaque projet, remplacez <code style="background:var(--dark-600);padding:1px 5px;border-radius:2px;color:var(--esri-cyan);">href="projets/xxx.html"</code> par le lien vers votre page dédiée ou votre portfolio en ligne. Pour ajouter des images, remplacez les blocs <code style="background:var(--dark-600);padding:1px 5px;border-radius:2px;color:var(--esri-cyan);">&lt;div class="projet-img-placeholder"&gt;</code> par <code style="background:var(--dark-600);padding:1px 5px;border-radius:2px;color:var(--esri-cyan);">&lt;img class="projet-img" src="images/xxx.jpg" alt="…"&gt;</code>.</p>
+    </div> -->
+  </div>
+</section>
+
+<!-- ═══════════════════════════ CARTE OSM ═══════════════════════════ -->
+<section id="carte">
+  <div class="container">
+    <div class="fade-in">
+      <div class="section-tag">Géographie & Mobilité</div>
+      <h2 class="section-title">Localisation &<br>Zones d'Intervention</h2>
+    </div>
+    <div class="carte-layout fade-in">
+      <div class="carte-info">
+        <h3>Actif entre Paris et l'Afrique</h3>
+        <p>Basé en Île-de-France, je suis disponible pour des missions en France entière et à l'international, avec une priorité pour l'Afrique subsaharienne. Mobilité nationale et internationale.</p>
+        <p>La carte interactive affiche mes lieux d'intervention : poste actuel, expériences professionnelles et universités partenaires.</p>
+
+        <div class="geo-layers">
+          <div class="section-tag" style="margin-bottom:.5rem;">Fonds de carte disponibles</div>
+
+          <button class="layer-btn active" id="btn-osm" onclick="switchLayer('osm')">
+            <span class="layer-dot" style="background:#5DAF3E;"></span>
+            OSM Standard (fond de base)
+          </button>
+          <button class="layer-btn" id="btn-topo" onclick="switchLayer('topo')">
+            <span class="layer-dot" style="background:#56A0D3;"></span>
+            OpenTopoMap (relief)
+          </button>
+          <button class="layer-btn" id="btn-satellite" onclick="switchLayer('satellite')">
+            <span class="layer-dot" style="background:#007AC2;"></span>
+            Imagerie aérienne libre (Esri World Imagery)
+          </button>
+        </div>
+      </div>
+
+      <div id="osm-map"></div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════ ENSEIGNEMENT ACADÉMIQUE ═══════════════════════════ -->
+<section id="enseignement">
+  <div class="container">
+    <div class="teaching-header fade-in">
+      <div>
+        <div class="section-tag">Transmission du savoir</div>
+        <h2 class="section-title">Expertise<br>Académique</h2>
+        <p class="section-lead">Chargé d'enseignement vacataire depuis novembre 2020 (jusqu'en mars 2026), j'interviens dans 5 établissements universitaires en Île-de-France. Mes cours combinent rigueur scientifique et expérience terrain pour former les prochaines générations de géomaticiens.</p>
+      </div>
+      <div class="teaching-stat fade-in">
+        <div class="tstat"><span class="tstat-num">5</span><span class="tstat-label">Universités</span></div>
+        <div class="tstat"><span class="tstat-num">6</span><span class="tstat-label">Formations</span></div>
+        <div class="tstat"><span class="tstat-num">6</span><span class="tstat-label">Ans d'enseign.</span></div>
+      </div>
+    </div>
+
+    <!-- Grille des établissements -->
+    <div class="univ-grid fade-in">
+
+      <!-- Paris-Saclay -->
+      <div class="univ-card">
+        <div class="univ-card-header">
+          <div class="univ-logo" style="background:linear-gradient(135deg,#0063AF,#004D8C);">
+            UPS
+          </div>
+          <div class="univ-meta">
+            <h3>Université Paris-Saclay</h3>
+            <span class="univ-period">2020 – 2026</span>
+            <span class="univ-duration">6 ans</span>
+          </div>
+        </div>
+        <div class="univ-card-body">
+          <div class="course-block">
+            <span class="course-level">L3 ECOPUR</span>
+            <div class="course-title">Cartographier et répertorier la biodiversité</div>
+            <div class="course-tools">
+              <span class="ctool">QGIS</span>
+              <span class="ctool">QField</span>
+              <span class="ctool">Collecte terrain</span>
+			  <span class="ctool">Cartographie thématique</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- MNHN -->
+      <div class="univ-card">
+        <div class="univ-card-header">
+          <div class="univ-logo" style="background:linear-gradient(135deg,#1A6B3C,#155230);">
+            MNHN
+          </div>
+          <div class="univ-meta">
+            <h3>Muséum National d'Histoire Naturelle</h3>
+            <span class="univ-period">2022</span>
+            <span class="univ-duration">Vacataire</span>
+          </div>
+        </div>
+        <div class="univ-card-body">
+          <div class="course-block">
+            <span class="course-level">M2 SeB – TTSE</span>
+            <div class="course-title">SIG pour la biodiversité et l'aménagement du territoire</div>
+            <div class="course-tools">
+              <span class="ctool">QGIS</span>
+              <span class="ctool">Analyse spatiale</span>
+              <span class="ctool">Biodiversité</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Nanterre -->
+      <div class="univ-card">
+        <div class="univ-card-header">
+          <div class="univ-logo" style="background:linear-gradient(135deg,#6B1A1A,#8B2020);">
+            UPN
+          </div>
+          <div class="univ-meta">
+            <h3>Université Paris Nanterre</h3>
+            <span class="univ-period">2024</span>
+            <span class="univ-duration">Vacataire</span>
+          </div>
+        </div>
+        <div class="univ-card-body">
+          <div class="course-block">
+            <span class="course-level">M2 Nourad & Gedelo</span>
+            <div class="course-title">Géomatique et analyse spatiale avancée</div>
+            <div class="course-tools">
+              <span class="ctool">QGIS</span>
+              <span class="ctool">ArcGIS Pro</span>
+              <span class="ctool">Analyse spatiale</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- CY Cergy (2 formations) -->
+      <div class="univ-card full-width">
+        <div class="univ-card-header">
+          <div class="univ-logo" style="background:linear-gradient(135deg,#007AC2,#005A8E); min-width:54px;">
+            CYU
+          </div>
+          <div class="univ-meta">
+            <h3>CY Cergy Paris Université</h3>
+            <span class="univ-period">2023 – 2026</span>
+            <span class="univ-duration">3 ans · 2 formations</span>
+          </div>
+        </div>
+        <div class="univ-card-body">
+          <div class="course-block">
+            <span class="course-level">M1 GAEUR</span>
+            <div class="course-title">SIG Web – Geoserver, PostGIS & Leaflet</div>
+            <div class="course-tools">
+              <span class="ctool">Geoserver</span>
+              <span class="ctool">PostGIS</span>
+              <span class="ctool">Leaflet</span>
+              <span class="ctool">SIG Web open source</span>
+            </div>
+          </div>
+          <div class="course-block">
+            <span class="course-level">M1 STPE</span>
+            <div class="course-title">SIG et cartographie des risques naturels</div>
+            <div class="course-tools">
+              <span class="ctool">QGIS</span>
+			  <span class="ctool">ArcGIS Pro</span>
+              <span class="ctool">Cartographie thématique</span>
+              <span class="ctool">Risques naturels</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Bloc engagement Afrique -->
+    <div class="africa-focus fade-in">
+      <div class="africa-icon">🌍</div>
+      <div>
+        <h3>Engagement envers l'Afrique</h3>
+        <p>Né au Burkina Faso, formé entre Ouagadougou et Paris, je contribue activement au renforcement des capacités géomatiques en Afrique. Président du <strong>Réseau des Géomaticiens Burkinabè de la Diaspora (RGBD)</strong> et membre du <a href="https://rpag.africa/" target="_blank">Réseau des Professionnels Africains de Géomatique (RPAG)</a>, je suis disponible pour des missions d'enseignement, de consulting ou de mise en place de programmes SIG dans les universités et institutions du Burkina Faso et de toute l'Afrique subsaharienne.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════ PARCOURS ═══════════════════════════ -->
+<section id="parcours">
+  <div class="container">
+    <div class="fade-in">
+      <div class="section-tag">Expériences</div>
+      <h2 class="section-title">Parcours<br>Professionnel</h2>
+    </div>
+    <div class="timeline fade-in">
+
+      <div class="timeline-item">
+        <div class="timeline-dot"></div>
+        <div class="timeline-date">2024 → Présent</div>
+        <div class="timeline-role">Responsable du Service SIG</div>
+        <div class="timeline-org"><a href="https://www.sicteub.org/" target="_blank">Syndicat Mixte Thève-Ysieux-Nonette</a>, Asnières-sur-Oise · CDI</div>
+        <ul class="timeline-points">
+          <li>Pilotage du marché et déploiement du SIG du syndicat sous ArcGIS et 1Water</li>
+          <li>Structuration et administration des bases de données patrimoniales sous PostGIS</li>
+          <li>Implémentation du portail cartographique et déploiement d'applications métiers</li>
+          <li>Mise en place de procédures de contrôle qualité</li>
+        </ul>
+        <div class="timeline-links">
+          <a class="timeline-url" href="https://www.sicteub.org/" target="_blank">Site du syndicat</a>
+        </div>
+      </div>
+
+      <div class="timeline-item">
+        <div class="timeline-dot"></div>
+        <div class="timeline-date">2022 – 2024</div>
+        <div class="timeline-role">Chef de Projet SIG – Webmapping</div>
+        <div class="timeline-org"><a href="https://www.seine-saint-denis.fr" target="_blank">Conseil Départemental de la Seine-Saint-Denis</a>, Bobigny · CDD</div>
+        <ul class="timeline-points">
+          <li>Déploiement d'ArcGIS Enterprise pour la collectivité de 1,7M d'habitants</li>
+          <li>Conception du portail cartographique grand public sous ArcGIS Site</li>
+          <li>Pilotage de la montée de version ArcGIS Enterprise 10.9</li>
+          <li>Encadrement et formation de l'équipe géomatique</li>
+        </ul>
+        <div class="timeline-links">
+          <a class="timeline-url" href="https://seinesaintdenis.fr/" target="_blank">CD93</a>
+          <a class="timeline-url" href="https://geo.seinesaintdenis.fr/portal/apps/sites/#/geoportail93" target="_blank">Portail carto</a>
+        </div>
+      </div>
+
+      <div class="timeline-item">
+        <div class="timeline-dot"></div>
+        <div class="timeline-date">2021 – 2022</div>
+        <div class="timeline-role">Ingénieur Géomatique Smart City</div>
+        <div class="timeline-org"><a href="https://www.gouv.mc" target="_blank">Gouvernement Monégasque</a> – Synergie Technologie, Monaco · CDI</div>
+        <ul class="timeline-points">
+          <li>Administration de la plateforme ArcGIS Enterprise, ArcGIS Online, YourMonaco</li>
+          <li>Déploiement d'applications mobiles de collecte terrain (Institut du Patrimoine)</li>
+          <li>Structuration des données interservices gouvernementaux</li>
+        </ul>
+        <div class="timeline-links">
+          <a class="timeline-url" href="https://www.gouv.mc" target="_blank">Gouvernement Monaco</a>
+        </div>
+      </div>
+
+      <div class="timeline-item">
+        <div class="timeline-dot"></div>
+        <div class="timeline-date">2020 – 2026</div>
+        <div class="timeline-role">Chargé d'Enseignement SIG (Vacataire)</div>
+        <div class="timeline-org">Paris-Saclay · MNHN · Nanterre · CY Cergy Paris · Freelance</div>
+        <ul class="timeline-points">
+          <li>5 établissements, 6 formations, du L3 au M2</li>
+          <li>QGIS, QField, ArcGIS Pro, SIG Web (Geoserver, PostGIS, Leaflet)</li>
+          <li>Biodiversité, analyse spatiale, cartographie des risques, urbanisme</li>
+        </ul>
+        <div class="timeline-links">
+          <a class="timeline-url" href="https://www.universite-paris-saclay.fr" target="_blank">Paris-Saclay</a>
+          <a class="timeline-url" href="https://www.mnhn.fr" target="_blank">MNHN</a>
+          <a class="timeline-url" href="https://www.parisnanterre.fr" target="_blank">Paris Nanterre</a>
+          <a class="timeline-url" href="https://www.cyu.fr" target="_blank">CY Cergy</a>
+        </div>
+      </div>
+
+      <div class="timeline-item">
+        <div class="timeline-dot"></div>
+        <div class="timeline-date">2019 – 2020</div>
+        <div class="timeline-role">Ingénieur Géomaticien</div>
+        <div class="timeline-org"><a href="https://www.grandparissud.fr" target="_blank">CA Grand Paris Sud Seine Essonne Sénart</a>, Evry · CDD</div>
+        <ul class="timeline-points">
+          <li>Administration du SIG intercommunal GéoGénérateur</li>
+          <li>Assistance à maîtrise d'ouvrage et contrôle des bases de données</li>
+        </ul>
+        <div class="timeline-links">
+          <a class="timeline-url" href="https://www.grandparissud.fr" target="_blank">Grand Paris Sud</a>
+        </div>
+      </div>
+
+      <div class="timeline-item">
+        <div class="timeline-dot"></div>
+        <div class="timeline-date">2018 – 2019</div>
+        <div class="timeline-role">Apprenti Ingénieur Géomatique</div>
+        <div class="timeline-org">Communauté d'Agglomération de Cergy-Pontoise (CACP), Cergy-Pontoise</div>
+        <ul class="timeline-points">
+          <li>Référent SIG assainissement – acquisition, contrôle, intégration des données</li>
+          <li>Mise en place d'une application métier de gestion des interventions réseau sous ArcGIS</li>
+          <li>Implémentation de Collector for ArcGIS pour la collecte terrain</li>
+        </ul>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════ OUTILS ═══════════════════════════ -->
+<section id="outils">
+  <div class="container">
+    <div class="fade-in">
+      <div class="section-tag">Stack technique</div>
+      <h2 class="section-title">Outils &<br>Compétences</h2>
+    </div>
+    <div class="tools-layout fade-in">
+      <div>
+        <div class="tool-category">
+          <div class="tool-cat-label">SIG Desktop</div>
+          <div class="tool-tags">
+            <span class="tool-tag">ArcGIS Pro</span><span class="tool-tag">ArcMap</span><span class="tool-tag">QGIS</span>
+            <span class="tool-tag">FME</span><span class="tool-tag">AutoCAD Map 2D</span><span class="tool-tag">1Water</span>
+          </div>
+        </div>
+        <div class="tool-category">
+          <div class="tool-cat-label">SIG Web & Plateforme</div>
+          <div class="tool-tags">
+            <span class="tool-tag">ArcGIS Enterprise</span><span class="tool-tag">ArcGIS Online</span>
+            <span class="tool-tag">Portal for ArcGIS</span><span class="tool-tag">Geoserver</span>
+            <span class="tool-tag">GéoGénérateur</span><span class="tool-tag">Arcopole Builder</span>
+          </div>
+        </div>
+        <div class="tool-category">
+          <div class="tool-cat-label">SIG Mobile & Collecte</div>
+          <div class="tool-tags">
+            <span class="tool-tag">Field Map</span><span class="tool-tag">Survey123</span>
+            <span class="tool-tag">QuickCapture</span><span class="tool-tag">QField</span><span class="tool-tag">KoboCollect</span>
+          </div>
+        </div>
+        <div class="tool-category">
+          <div class="tool-cat-label">Bases de données & Programmation</div>
+          <div class="tool-tags">
+            <span class="tool-tag">PostgreSQL</span><span class="tool-tag">PostGIS</span><span class="tool-tag">MySQL</span>
+            <span class="tool-tag">SQL</span><span class="tool-tag">Python</span><span class="tool-tag">Arcade</span><span class="tool-tag">HTML5/CSS3</span>
+          </div>
+        </div>
+        <div class="tool-category">
+          <div class="tool-cat-label">Gestion de Projet & Collaboration</div>
+          <div class="tool-tags">
+            <span class="tool-tag">Microsoft 365</span><span class="tool-tag">OpenProject</span>
+            <span class="tool-tag">Trello</span><span class="tool-tag">Klaxoon</span><span class="tool-tag">One2team</span>
+          </div>
+        </div>
+      </div>
+      <div class="certifs-block">
+        <h3>Formations & Certifications</h3>
+        <div class="certif-item"><div class="certif-dot"></div><p><strong>CNFTP</strong> – Conduite de projet, méthodes Agile/SCRUM, management, animation de réunions, Gestion de marché public</p></div>
+        <div class="certif-item"><div class="certif-dot"></div><p><strong>Esri (ArcGIS)</strong> – Python for ArcGIS, Stratégie de plateforme, Migration ArcMap → ArcGIS Pro, Expérience Builder, Utility Network</p></div>
+        <div class="certif-item"><div class="certif-dot"></div><p><strong>1Spatial</strong> – FME Desktop, 1Water,  et Onhys One</p></div>
+        <div class="certif-item"><div class="certif-dot"></div><p><strong>Cyril Group</strong> – PostgreSQL/PostGIS, GéoCadastre,GéoGenerateur, HTML5/CSS3, AutoCAD Map</p></div>
+        <div class="certif-item"><div class="certif-dot"></div><p><strong>Master 2</strong> Géomatique appliquée aux études urbaines risque – Université de Cergy-Pontoise (2019)</p></div>
+        <div class="certif-item"><div class="certif-dot"></div><p><strong>Master</strong> Sciences Sociales / Territoire, Espace, Société – EHESS Paris (2018)</p></div>
+        <div class="certif-item"><div class="certif-dot"></div><p><strong>Licence</strong> Mathématiques et applications aux sciences – Université Ouaga 3S, Burkina Faso (2016)</p></div>
+
+        <div style="margin-top:2rem;padding:1.5rem;background:var(--dark-700);border-left:3px solid var(--esri-blue);border-radius:3px;">
+          <div class="section-tag" style="margin-bottom:.5rem;">Engagement bénévole</div>
+          <p style="font-size:.88rem;color:var(--text-300);line-height:1.7;">
+            Président du <strong style="color:var(--text-100)">RGBD</strong> (Réseau des Géomaticiens Burkinabè de la Diaspora) · Membre du
+            <a href="https://www.cartong.org" target="_blank" style="color:var(--esri-blue);text-decoration:none;">CartONG</a> ·
+            <a href="https://www.openstreetmap.org" target="_blank" style="color:var(--esri-blue);text-decoration:none;">OpenStreetMap</a> ·
+            <strong style="color:var(--text-100)">JobIRL</strong> ·
+            <a href="https://community.esri.com/t5/france/ct-p/france" target="_blank" style="color:var(--esri-blue);text-decoration:none;">Géocommunauté Esri</a> ·
+            RPAG (Réseau des Professionnels Africains de Géomatique)
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════ CONTACT ═══════════════════════════ -->
+<section id="contact">
+  <div class="container">
+    <div class="fade-in">
+      <div class="section-tag">Travaillons ensemble</div>
+      <h2 class="section-title">Me Contacter</h2>
+    </div>
+    <div class="contact-layout fade-in">
+      <div class="contact-text">
+        <p>Vous êtes une université, une collectivité territoriale, un gouvernement, ou une ONG souhaitant structurer vos données géospatiales ? Ou vous cherchez un formateur SIG expert pour vos équipes ?</p>
+        <p>Je suis disponible pour des missions de consulting, enseignement, formation ou déploiement de systèmes d'information géographique. Mobilité nationale et internationale.</p>
+        <div class="contact-infos">
+          <div class="contact-line">
+            <div class="contact-icon">📞</div>
+            <a href="tel:+33769148826">+33 7 69 14 88 26</a>
+          </div>
+          <div class="contact-line">
+            <div class="contact-icon">✉️</div>
+            <a href="mailto:gagbaz@gmail.com">gagbaz@gmail.com</a>
+          </div>
+          <div class="contact-line">
+            <div class="contact-icon">💼</div>
+            <a href="https://www.linkedin.com/in/bazileg-51711588/" target="_blank">LinkedIn – Bazile Gagré</a>
+          </div>
+          <div class="contact-line">
+            <div class="contact-icon">📍</div>
+            <span>France · Disponibilité : 3 mois · Mobilité nationale & internationale</span>
+          </div>
+        </div>
+      </div>
+
+      <!--
+        ════════════════════════════════════════════════════
+        FORMSPREE – ÉTAPE D'ACTIVATION :
+        1. Créez un compte gratuit sur https://formspree.io
+        2. Cliquez "+ New Form" → copiez votre Form ID
+        3. Remplacez "YOUR_FORM_ID" ci-dessous par cet ID
+           Exemple : action="https://formspree.io/f/xpzgkwra"
+        ════════════════════════════════════════════════════
+      -->
+      <form
+        class="contact-form"
+        id="contact-form"
+        action="https://formspree.io/f/YOUR_FORM_ID"
+        method="POST"
+      >
+        <div class="form-row">
+          <input class="form-input" type="text" name="nom" placeholder="Votre nom" required>
+          <input class="form-input" type="email" name="email" placeholder="Votre email" required>
+        </div>
+        <input class="form-input" type="text" name="organisation" placeholder="Organisation / Institution">
+        <input class="form-input" type="text" name="objet" placeholder="Objet de votre demande">
+        <textarea class="form-textarea" name="message" placeholder="Décrivez votre besoin (formation, consulting, projet SIG…)" required></textarea>
+        <input type="text" name="_gotcha" style="display:none">
+        <button class="btn-send" type="submit" id="submit-btn">Envoyer le message →</button>
+        <p class="form-note">Ce formulaire est propulsé par Formspree. Vos données ne sont pas revendues.</p>
+      </form>
+      <div class="form-success" id="form-success">
+        ✅ <strong>Message envoyé !</strong> Merci pour votre message. Je vous répondrai dans les meilleurs délais.
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <div class="footer-logo">B.<span>Gagré</span> — Géomaticien Senior</div>
+  <p>© 2025 Bazile Gagré · Géomaticien Senior & Expert SIG</p>
+  <p>RGBD · RPAG · CartONG · OpenStreetMap</p>
+</footer>
+
+<!-- Leaflet JS -->
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+<script>
+// ── FADE-IN SCROLL ──
+const observer = new IntersectionObserver(entries => {
+  entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('visible'); });
+}, { threshold: 0.1 });
+document.querySelectorAll('.fade-in').forEach(el => observer.observe(el));
+
+// ════════════════════════════════════════
+// ── CARTE LEAFLET ──
+// ════════════════════════════════════════
+
+const layers = {
+  osm: L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+    maxZoom: 19
+  }),
+  topo: L.tileLayer('https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png', {
+    attribution: '© <a href="https://opentopomap.org">OpenTopoMap</a> (CC-BY-SA)',
+    maxZoom: 17
+  }),
+  satellite: L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
+    attribution: '© Esri, Maxar, Earthstar Geographics – Imagerie libre de droits',
+    maxZoom: 19
+  })
+};
+
+let currentLayer = layers.osm;
+
+const map = L.map('osm-map', {
+  center: [48.85, 2.35],
+  zoom: 5,
+  layers: [currentLayer]
+});
+
+// Marqueurs
+const iconStyle = color => L.divIcon({
+  className: '',
+  html: `<div style="width:14px;height:14px;background:${color};border-radius:50%;border:3px solid white;box-shadow:0 2px 8px rgba(0,0,0,.4);"></div>`,
+  iconSize: [14,14], iconAnchor: [7,7]
+});
+
+const lieux = [
+  { coords:[48.8980,2.2960], label:'📍 Asnières-sur-Oise – SMTYN (CDI actuel)', color:'#F4A91A' },
+  { coords:[48.9091,2.4407], label:'🏛️ Bobigny – Conseil Départemental 93', color:'#007AC2' },
+  { coords:[43.7384,7.4246], label:'🏛️ Monaco – Smart City Gouvernement', color:'#007AC2' },
+  { coords:[48.6310,2.4480], label:'🏙️ Évry – Grand Paris Sud', color:'#007AC2' },
+  { coords:[48.8800,2.2470], label:'🎓 Université Paris Nanterre', color:'#00B4F0' },
+  { coords:[48.7128,2.1694], label:'🎓 Université Paris-Saclay', color:'#00B4F0' },
+  { coords:[48.8447,2.3554], label:'🎓 MNHN Paris', color:'#00B4F0' },
+  { coords:[49.0347,2.0769], label:'🎓 CY Cergy Paris Université', color:'#00B4F0' },
+  { coords:[12.3647,-1.5332], label:'🌍 Ouagadougou, Burkina Faso', color:'#F4A91A' },
+];
+
+lieux.forEach(l => {
+  L.marker(l.coords, { icon: iconStyle(l.color) })
+   .bindPopup(`<strong style="font-family:sans-serif;font-size:.85rem;">${l.label}</strong>`)
+   .addTo(map);
+});
+
+// Légende
+const legend = L.control({ position:'bottomright' });
+legend.onAdd = () => {
+  const div = L.DomUtil.create('div');
+  div.style.cssText = 'background:rgba(17,30,48,.92);backdrop-filter:blur(8px);padding:10px 14px;border-radius:4px;font-family:sans-serif;font-size:11px;box-shadow:0 4px 20px rgba(0,0,0,.4);line-height:2;border:1px solid rgba(0,122,194,.3);';
+  div.innerHTML = `
+    <div style="font-weight:700;margin-bottom:6px;color:#EEF3F8;">Bazile Gagré – Zones d'activité</div>
+    <div style="color:#B0C4D8;"><span style="color:#F4A91A;font-size:14px;">●</span> Poste actuel & origine</div>
+    <div style="color:#B0C4D8;"><span style="color:#007AC2;font-size:14px;">●</span> Expériences professionnelles</div>
+    <div style="color:#B0C4D8;"><span style="color:#00B4F0;font-size:14px;">●</span> Universités partenaires</div>
+  `;
+  return div;
+};
+legend.addTo(map);
+
+// Switcher de couches
+function switchLayer(name) {
+  map.removeLayer(currentLayer);
+  currentLayer = layers[name];
+  map.addLayer(currentLayer);
+  document.querySelectorAll('.layer-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('btn-' + name).classList.add('active');
+}
+
+// ════════════════════════════════════════
+// ── FORMSPREE ──
+// ════════════════════════════════════════
+const form    = document.getElementById('contact-form');
+const btn     = document.getElementById('submit-btn');
+const success = document.getElementById('form-success');
+
+form.addEventListener('submit', async function(e) {
+  e.preventDefault();
+  if (form.action.includes('YOUR_FORM_ID')) {
+    alert('⚠️ Pour activer le formulaire :\n1. Créez un compte sur formspree.io\n2. Copiez votre Form ID\n3. Remplacez YOUR_FORM_ID dans le code HTML.');
+    return;
+  }
+  btn.disabled = true;
+  btn.textContent = 'Envoi en cours…';
+  try {
+    const data = new FormData(form);
+    const response = await fetch(form.action, { method:'POST', body:data, headers:{'Accept':'application/json'} });
+    if (response.ok) {
+      form.style.display = 'none';
+      success.classList.add('show');
+    } else {
+      btn.disabled = false;
+      btn.textContent = 'Envoyer le message →';
+      alert('Une erreur est survenue. Veuillez réessayer ou me contacter directement par email.');
+    }
+  } catch (err) {
+    btn.disabled = false;
+    btn.textContent = 'Envoyer le message →';
+    alert('Erreur réseau. Vérifiez votre connexion et réessayez.');
+  }
+});
+</script>
+</body>
+</html>
